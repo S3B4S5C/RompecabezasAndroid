@@ -47,6 +47,14 @@ public class PuzzleBoard {
         // Si la pieza seleccionada es adyacente al espacio vacío, intercambiamos
         if (isAdjacent(position, emptyIndex)) {
             Collections.swap(puzzlePieces, position, emptyIndex);
+
+            PuzzlePiece movedPiece = puzzlePieces.get(emptyIndex);
+            if (movedPiece != null) {
+                int newRow = emptyIndex / cols;
+                int newCol = emptyIndex % cols;
+                movedPiece.setActualPosition(newRow, newCol);
+            }
+
             return true; // Movimiento válido
         }
         return false; // No se puede mover
@@ -60,15 +68,13 @@ public class PuzzleBoard {
                 (Math.abs(col1 - col2) == 1 && row1 == row2);   // Movimiento horizontal
     }
 
-    public int manhattanDistance() {
-        int distance = 0;
-        for (PuzzlePiece piece : puzzlePieces) {
-            if (piece != null) {
-                distance += Math.abs(piece.getCurrentRow() - piece.getOriginalRow()) +
-                        Math.abs(piece.getCurrentCol() - piece.getOriginalCol());
+    public boolean isSolved() {
+        for (int i = 0; i < puzzlePieces.size() - 1; i++) { // Ignorar el espacio vacío
+            PuzzlePiece piece = puzzlePieces.get(i);
+            if (piece == null || piece.getActualRow() != piece.getOriginalRow() || piece.getActualCol() != piece.getOriginalCol()) {
+                return false;
             }
         }
-        return distance;
+        return true;
     }
-
 }

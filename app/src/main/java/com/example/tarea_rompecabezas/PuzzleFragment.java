@@ -8,7 +8,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
-
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import androidx.fragment.app.Fragment;
 
 import java.util.List;
@@ -40,6 +41,9 @@ public class PuzzleFragment extends Fragment {
                 // Mover pieza si es válida y actualizar el estado
                 if (puzzleBoard.movePiece(position)) {
                     ((PuzzleAdapter) gridView.getAdapter()).updatePieces(puzzleBoard.getPuzzlePieces());
+                if (puzzleBoard.isSolved()){
+                    showGameCompletedDialog();
+                }
                 }
             }
         });
@@ -55,6 +59,13 @@ public class PuzzleFragment extends Fragment {
         return view;
     }
 
+
+    private void showGameCompletedDialog(){
+        new AlertDialog.Builder(getContext()).setTitle("Felicidades")
+                .setMessage("Has Completado el rompecabezas")
+                .setPositiveButton("OK", (dialog, which) -> getActivity().finish())
+                .setCancelable(false).show();
+    }
     private void animateSolution(List<PuzzleBoard> steps) {
         // Implementación para animar la solución (por ejemplo, con un Handler o ValueAnimator)
     }
