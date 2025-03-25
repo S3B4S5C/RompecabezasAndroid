@@ -8,8 +8,8 @@ class PuzzleSolver {
 
     public PuzzleSolver(PuzzleBoard puzzleBoard) {
         this.puzzleBoard = puzzleBoard;
-        this.rows = puzzleBoard.getPuzzlePieces().size() / 3; // Suponiendo un 3x3
-        this.cols = 3;
+        this.rows = puzzleBoard.getRows(); // Obtener filas dinámicamente
+        this.cols = puzzleBoard.getCols(); // Obtener columnas dinámicamente
     }
 
     public List<Integer> solve() {
@@ -57,6 +57,7 @@ class PuzzleSolver {
         return true;
     }
 
+
     private int heuristic(List<PuzzlePiece> state) {
         int h = 0;
         for (int i = 0; i < state.size(); i++) {
@@ -68,6 +69,7 @@ class PuzzleSolver {
         }
         return h;
     }
+
 
     private List<Node> getNeighbors(Node node) {
         List<Node> neighbors = new ArrayList<>();
@@ -88,6 +90,7 @@ class PuzzleSolver {
         }
         return neighbors;
     }
+
 
     private String serializeState(List<PuzzlePiece> state) {
         StringBuilder sb = new StringBuilder();

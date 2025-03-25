@@ -17,7 +17,12 @@ public class PuzzleBoard {
         this.cols = cols;
         createPuzzlePieces();
     }
-
+    public int getRows() {
+        return this.rows;
+    }
+    public int getCols() {
+        return this.cols;
+    }
     private void createPuzzlePieces() {
         puzzlePieces = new ArrayList<>();
         int pieceWidth = originalImage.getWidth() / cols;
