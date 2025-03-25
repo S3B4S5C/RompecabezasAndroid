@@ -42,9 +42,33 @@ public class PuzzleBoard {
     }
 
     public boolean movePiece(int position) {
-        // Lógica para determinar si la pieza en "position" es movible (adyacente al espacio vacío).
-        // Si es válida, se realiza el intercambio y se retorna true.
-        // (La implementación detallada dependerá de cómo se gestione la posición y se almacene el estado)
-        return false; // A implementar
+        int emptyIndex = puzzlePieces.indexOf(null); // Encuentra el espacio vacío
+
+        // Si la pieza seleccionada es adyacente al espacio vacío, intercambiamos
+        if (isAdjacent(position, emptyIndex)) {
+            Collections.swap(puzzlePieces, position, emptyIndex);
+            return true; // Movimiento válido
+        }
+        return false; // No se puede mover
     }
+
+    private boolean isAdjacent(int pos1, int pos2) {
+        int row1 = pos1 / cols, col1 = pos1 % cols;
+        int row2 = pos2 / cols, col2 = pos2 % cols;
+
+        return (Math.abs(row1 - row2) == 1 && col1 == col2) ||  // Movimiento vertical
+                (Math.abs(col1 - col2) == 1 && row1 == row2);   // Movimiento horizontal
+    }
+
+    public int manhattanDistance() {
+        int distance = 0;
+        for (PuzzlePiece piece : puzzlePieces) {
+            if (piece != null) {
+                distance += Math.abs(piece.getCurrentRow() - piece.getOriginalRow()) +
+                        Math.abs(piece.getCurrentCol() - piece.getOriginalCol());
+            }
+        }
+        return distance;
+    }
+
 }
