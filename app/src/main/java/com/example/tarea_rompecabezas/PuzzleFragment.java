@@ -9,9 +9,9 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
 import android.app.AlertDialog;
-
+import android.util.Log;
 import androidx.fragment.app.Fragment;
-
+import android.os.Handler;
 import java.util.List;
 
 public class PuzzleFragment extends Fragment {
@@ -47,9 +47,10 @@ public class PuzzleFragment extends Fragment {
         btnSolve.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Algoritmo solver = new Algoritmo(puzzleBoard);
-                List<PuzzleBoard> solutionSteps = solver.solve();
+                PuzzleSolver solver = new PuzzleSolver(puzzleBoard);
+                List<Integer> solutionSteps = solver.solve();
                 // Aquí se podría implementar una animación para mostrar cada paso de la solución
+                Log.d("amigomio", solutionSteps.toString());
                 animateSolution(solutionSteps);
             }
         });
@@ -63,7 +64,24 @@ public class PuzzleFragment extends Fragment {
                 .setPositiveButton("OK", (dialog, which) -> getActivity().finish())
                 .setCancelable(false).show();
     }
-    private void animateSolution(List<PuzzleBoard> steps) {
-        // Implementación para animar la solución (por ejemplo, con un Handler o ValueAnimator)
+    public void animateSolution(List<Integer> steps) {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            int index = 0;
+
+            @Override
+            public void run() {
+                if (index < steps.size()) {
+                    if (puzzleBoard.movePiece(steps.get(index))) {
+                        ((PuzzleAdapter) gridView.getAdapter()).updatePieces(puzzleBoard.getPuzzlePieces());
+                        if (puzzleBoard.isSolved()){
+                            showGameCompletedDialog();
+                        }
+                    }
+                    index++;
+                    handler.postDelayed(this, 500); // Retraso de 500ms entre movimientos
+                }
+            }
+        }, 500);
     }
 }
