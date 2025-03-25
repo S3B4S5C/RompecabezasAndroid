@@ -9,7 +9,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
+
 import androidx.fragment.app.Fragment;
 
 import java.util.List;
@@ -28,22 +28,19 @@ public class PuzzleFragment extends Fragment {
         btnSolve = view.findViewById(R.id.btnSolve);
         if(getArguments() != null) {
             capturedImage = getArguments().getParcelable("capturedImage");
+            int puzzleSize = getArguments().getInt("puzzleSize", 3); // Valor por defecto 3x3
+            puzzleBoard = new PuzzleBoard(capturedImage, puzzleSize, puzzleSize);
+            gridView.setNumColumns(puzzleSize);
         }
-        // Inicialización del PuzzleBoard (ej. rompecabezas de 3x3)
-        puzzleBoard = new PuzzleBoard(capturedImage, 3, 3);
 
         // Se asigna un adaptador para mostrar las piezas en un GridView
         gridView.setAdapter(new PuzzleAdapter(getContext(), puzzleBoard.getPuzzlePieces()));
 
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // Mover pieza si es válida y actualizar el estado
-                if (puzzleBoard.movePiece(position)) {
-                    ((PuzzleAdapter) gridView.getAdapter()).updatePieces(puzzleBoard.getPuzzlePieces());
+        gridView.setOnItemClickListener((parent, view1, position, id) -> {
+            if (puzzleBoard.movePiece(position)) {
+                ((PuzzleAdapter) gridView.getAdapter()).updatePieces(puzzleBoard.getPuzzlePieces());
                 if (puzzleBoard.isSolved()){
                     showGameCompletedDialog();
-                }
                 }
             }
         });
