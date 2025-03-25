@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
@@ -13,10 +14,16 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import androidx.fragment.app.Fragment;
+import com.yalantis.ucrop.UCrop;
+import java.io.File;
+import java.io.IOException;
+import android.app.Activity;
 
 public class CaptureFragment extends Fragment {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int REQUEST_CROP_IMAGE = UCrop.REQUEST_CROP;
     private ImageView imageView;
+    private Uri imageUri;
     private Button btnCapture;
 
     private Bitmap capturedImage;
@@ -31,6 +38,19 @@ public class CaptureFragment extends Fragment {
         return view;
     }
 
+    private void startCrop(Uri sourceUri) {
+        if (sourceUri == null) {
+            showError("No se pudo obtener la imagen.");
+            return;
+        }
+
+        Uri destinationUri = Uri.fromFile(new File(requireContext().getCacheDir(), "cropped.jpg"));
+        UCrop.of(sourceUri, destinationUri)
+                .withAspectRatio(1, 1) // Imagen cuadrada
+                .start(requireContext(), this);
+    }
+
+
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
@@ -43,26 +63,58 @@ public class CaptureFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap originalBitmap = (Bitmap) extras.get("data");
 
-
-            if (originalBitmap != null) {
-                // Recortar la imagen a un cuadrado
-                capturedImage = cropToSquare(originalBitmap);
-                imageView.setImageBitmap(capturedImage);
-
-                // Preguntar tamaño del rompecabezas
-                showSizeSelectionDialog();
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == REQUEST_IMAGE_CAPTURE && data != null) {
+                Bundle extras = data.getExtras();
+                if (extras != null) {
+                    Bitmap imageBitmap = (Bitmap) extras.get("data");
+                    if (imageBitmap != null) {
+                        imageUri = saveImageToCache(imageBitmap);
+                        if (imageUri != null) {
+                            startCrop(imageUri);
+                        } else {
+                            showError("Error al guardar la imagen.");
+                        }
+                    }
+                }
+            } else if (requestCode == UCrop.REQUEST_CROP) {
+                Uri croppedUri = UCrop.getOutput(data);
+                if (croppedUri != null) {
+                    try {
+                        capturedImage = MediaStore.Images.Media.getBitmap(requireActivity().getContentResolver(), croppedUri);
+                        imageView.setImageBitmap(capturedImage);
+                        showSizeSelectionDialog();
+                    } catch (IOException e) {
+                        showError("Error al cargar la imagen recortada.");
+                        e.printStackTrace();
+                    }
+                }
             }
+        } else if (resultCode == UCrop.RESULT_ERROR) {
+            showError("Error en el recorte.");
         }
     }
 
+    private Uri saveImageToCache(Bitmap bitmap) {
+        File cachePath = new File(requireContext().getCacheDir(), "captured.jpg");
+        try {
+            java.io.FileOutputStream stream = new java.io.FileOutputStream(cachePath);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+            stream.flush();
+            stream.close();
+            return Uri.fromFile(cachePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     private Bitmap cropToSquare(Bitmap bitmap) {
+        if (bitmap == null) return null;
+
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
-        int size = Math.min(width, height); // Tamaño del lado del cuadrado
+        int size = Math.min(width, height);
         int xOffset = (width - size) / 2;
         int yOffset = (height - size) / 2;
 
@@ -73,13 +125,7 @@ public class CaptureFragment extends Fragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Selecciona el tamaño del rompecabezas")
                 .setItems(new String[]{"3x3", "4x4", "5x5"}, (dialog, which) -> {
-                    int size;
-                    switch (which) {
-                        case 0: size = 3; break;
-                        case 1: size = 4; break;
-                        case 2: size = 5; break;
-                        default: size = 3; break;
-                    }
+                    int size = (which == 0) ? 3 : (which == 1) ? 4 : 5;
                     sendImageToPuzzleFragment(size);
                 })
                 .setCancelable(false)
@@ -87,15 +133,29 @@ public class CaptureFragment extends Fragment {
     }
 
     private void sendImageToPuzzleFragment(int size) {
-        Bundle bundle = new Bundle();
-        bundle.putParcelable("capturedImage", capturedImage);
-        bundle.putInt("puzzleSize", size);
+        if (capturedImage != null) {
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("capturedImage", capturedImage);
+            bundle.putInt("puzzleSize", size);
 
-        PuzzleFragment puzzleFragment = new PuzzleFragment();
-        puzzleFragment.setArguments(bundle);
-        getFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, puzzleFragment)
-                .addToBackStack(null)
-                .commit();
+            PuzzleFragment puzzleFragment = new PuzzleFragment();
+            puzzleFragment.setArguments(bundle);
+
+            requireActivity().getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, puzzleFragment)
+                    .addToBackStack(null)
+                    .commit();
+        } else {
+            showError("No se ha capturado ninguna imagen.");
+        }
     }
+
+    private void showError(String message) {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Error")
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
 }
