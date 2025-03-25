@@ -33,7 +33,10 @@ public class PuzzleBoard {
         }
         // Se elimina una pieza para crear el espacio vacío
         puzzlePieces.remove(puzzlePieces.size() - 1);
-        Collections.shuffle(puzzlePieces); // Opcional: mezcla para iniciar el juego
+        Collections.shuffle(puzzlePieces);
+        while (!isSolvable()) {
+            Collections.shuffle(puzzlePieces); // Opcional: mezcla para iniciar el juego
+        }
         puzzlePieces.add(null); // Representa el espacio en blanco
     }
 
@@ -76,5 +79,27 @@ public class PuzzleBoard {
             }
         }
         return true;
+    }
+
+    public boolean isSolvable() {
+        List<Integer> flattened = new ArrayList<>();
+
+        // Aplanar el puzzle en una lista sin incluir el espacio vacío
+        for (PuzzlePiece piece : puzzlePieces) {
+            if (piece != null) {
+                flattened.add(piece.getOriginalRow() * cols + piece.getOriginalCol() + 1);
+            }
+        }
+
+        int inversions = 0;
+        for (int i = 0; i < flattened.size(); i++) {
+            for (int j = i + 1; j < flattened.size(); j++) {
+                if (flattened.get(i) > flattened.get(j)) {
+                    inversions++;
+                }
+            }
+        }
+
+        return inversions % 2 == 0;
     }
 }
