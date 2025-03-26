@@ -35,6 +35,7 @@ import androidx.core.content.FileProvider;
 public class CaptureFragment extends Fragment {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_CROP_IMAGE = UCrop.REQUEST_CROP;
+    private static final int PICK_IMAGE_REQUEST = 100;
     private ImageView imageView;
     private Uri imageUri;
     private Button btnCapture;
@@ -47,9 +48,22 @@ public class CaptureFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_capture, container, false);
         imageView = view.findViewById(R.id.imageView);
         btnCapture = view.findViewById(R.id.btnCapture);
+        btnOpenGalery = view.findViewById(R.id.btnOpenGalery);
+        btnHistory = view.findViewById(R.id.btnHistory);
         btnCapture.setOnClickListener(v -> dispatchTakePictureIntent());
-
+        btnOpenGalery.setOnClickListener(v -> openGallery());
+        btnHistory.setOnClickListener(v -> openHistory());
         return view;
+    }
+
+    private void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+    }
+
+    private void openHistory() {
+   //     Intent intent = new Intent(requireActivity(), HistoryActivity.class);
+     //   startActivity(intent);
     }
 
     private void startCrop(Uri sourceUri) {
@@ -81,7 +95,12 @@ public class CaptureFragment extends Fragment {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 if (photoUri != null) {
-                    startCrop(photoUri);  // Usa el archivo en vez de la miniatura
+                    startCrop(photoUri);
+                }
+            } else if (requestCode == PICK_IMAGE_REQUEST) {  // Imagen seleccionada de la galería
+                if (data != null && data.getData() != null) {
+                    Uri selectedImageUri = data.getData();
+                    startCrop(selectedImageUri);
                 }
             } else if (requestCode == UCrop.REQUEST_CROP) {
                 Uri croppedUri = UCrop.getOutput(data);

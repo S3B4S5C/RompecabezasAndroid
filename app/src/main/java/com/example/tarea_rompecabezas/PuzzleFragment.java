@@ -1,7 +1,9 @@
 package com.example.tarea_rompecabezas;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +29,7 @@ public class PuzzleFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_puzzle, container, false);
         gridView = view.findViewById(R.id.gridView);
         btnSolve = view.findViewById(R.id.btnSolve);
+
         if(getArguments() != null) {
             capturedImage = getArguments().getParcelable("capturedImage");
             int puzzleSize = getArguments().getInt("puzzleSize", 3); // Valor por defecto 3x3
@@ -47,17 +50,38 @@ public class PuzzleFragment extends Fragment {
                 }
             }
         });
-        btnSolve.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PuzzleSolver solver = new PuzzleSolver(puzzleBoard);
-                List<Integer> solutionSteps = solver.solve();
-                // Aquí se podría implementar una animación para mostrar cada paso de la solución
-                Log.d("amigomio", solutionSteps.toString());
-                animateSolution(solutionSteps);
-            }
-        });
+        btnSolve.setOnClickListener(v -> new SolvePuzzleTask().execute());
         return view;
+    }
+    private class SolvePuzzleTask extends AsyncTask<Void, Void, List<Integer>> {
+        private ProgressDialog progressDialog;
+
+        @Override
+        protected void onPreExecute() {
+            // Mostrar el ProgressDialog antes de iniciar el algoritmo
+            progressDialog = new ProgressDialog(getContext());
+            progressDialog.setMessage("Resolviendo el rompecabezas...");
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+        }
+
+        @Override
+        protected List<Integer> doInBackground(Void... voids) {
+            // Ejecutar el algoritmo de resolución en segundo plano
+            PuzzleSolver solver = new PuzzleSolver(puzzleBoard);
+            return solver.solve();
+        }
+
+        @Override
+        protected void onPostExecute(List<Integer> solutionSteps) {
+            // Ocultar el ProgressDialog y ejecutar la animación
+            if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+
+            Log.d("amigomio", solutionSteps.toString());
+            animateSolution(solutionSteps);
+        }
     }
 
 
