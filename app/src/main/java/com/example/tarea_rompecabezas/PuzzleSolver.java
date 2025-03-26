@@ -14,28 +14,37 @@ class PuzzleSolver {
 
     public List<Integer> solve() {
         PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingInt(n -> n.f));
-        Set<String> visited = new HashSet<>();
+        Map<String, Integer> visited = new HashMap<>();
         List<PuzzlePiece> initialState = puzzleBoard.getPuzzlePieces();
 
         Node startNode = new Node(initialState, null, -1, 0, heuristic(initialState));
         openSet.add(startNode);
+        visited.put(serializeState(initialState), startNode.g);
 
         while (!openSet.isEmpty()) {
-            Node current = openSet.poll();
+            Node current = openSet.poll(); // Saca el mejor nodo
+
             if (isGoal(current.state)) {
                 return reconstructPath(current);
             }
 
-            visited.add(serializeState(current.state));
+            String currentStateKey = serializeState(current.state);
 
             for (Node neighbor : getNeighbors(current)) {
-                if (!visited.contains(serializeState(neighbor.state))) {
+                String neighborKey = serializeState(neighbor.state);
+                int newCost = neighbor.g;
+
+                // Solo añadir si es un mejor camino
+                if (!visited.containsKey(neighborKey) || newCost < visited.get(neighborKey)) {
+                    visited.put(neighborKey, newCost);
                     openSet.add(neighbor);
                 }
             }
         }
         return null; // No hay solución
     }
+
+
 
     private List<Integer> reconstructPath(Node node) {
         List<Integer> path = new ArrayList<>();
@@ -60,15 +69,41 @@ class PuzzleSolver {
 
     private int heuristic(List<PuzzlePiece> state) {
         int h = 0;
+        int linearConflict = 0;
+
         for (int i = 0; i < state.size(); i++) {
             PuzzlePiece piece = state.get(i);
             if (piece != null) {
-                h += Math.abs(piece.getActualRow() - piece.getOriginalRow()) +
-                        Math.abs(piece.getActualCol() - piece.getOriginalCol());
+                int goalRow = piece.getOriginalRow();
+                int goalCol = piece.getOriginalCol();
+                int currentRow = i / cols;
+                int currentCol = i % cols;
+
+                // Distancia Manhattan
+                h += Math.abs(currentRow - goalRow) + Math.abs(currentCol - goalCol);
+
+                // Linear Conflict
+                if (currentRow == goalRow) { // Verificar conflicto en la misma fila
+                    for (int j = i + 1; j < (currentRow + 1) * cols; j++) {
+                        PuzzlePiece other = state.get(j);
+                        if (other != null && other.getOriginalRow() == goalRow && other.getOriginalCol() < goalCol) {
+                            linearConflict += 2;
+                        }
+                    }
+                }
+                if (currentCol == goalCol) { // Verificar conflicto en la misma columna
+                    for (int j = i + cols; j < state.size(); j += cols) {
+                        PuzzlePiece other = state.get(j);
+                        if (other != null && other.getOriginalCol() == goalCol && other.getOriginalRow() < goalRow) {
+                            linearConflict += 2;
+                        }
+                    }
+                }
             }
         }
-        return h;
+        return h + linearConflict;
     }
+
 
 
     private List<Node> getNeighbors(Node node) {
@@ -88,8 +123,13 @@ class PuzzleSolver {
                 neighbors.add(new Node(newState, node, newIndex, node.g + 1, heuristic(newState)));
             }
         }
+
+        // Ordenar vecinos por f (priorizar los mejores caminos)
+        neighbors.sort(Comparator.comparingInt(n -> n.f));
+
         return neighbors;
     }
+
 
 
     private String serializeState(List<PuzzlePiece> state) {
