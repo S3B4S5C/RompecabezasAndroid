@@ -29,7 +29,7 @@ public class PuzzleFragment extends Fragment {
         if(getArguments() != null) {
             capturedImage = getArguments().getParcelable("capturedImage");
             int puzzleSize = getArguments().getInt("puzzleSize", 3); // Valor por defecto 3x3
-            puzzleBoard = new PuzzleBoard(capturedImage, puzzleSize, puzzleSize);
+            puzzleBoard = new PuzzleBoard(capturedImage, puzzleSize, puzzleSize, requireContext());
             gridView.setNumColumns(puzzleSize);
             gridView.setVerticalSpacing(10);
             gridView.setHorizontalSpacing(10);

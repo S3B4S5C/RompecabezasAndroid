@@ -9,16 +9,20 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.util.DisplayMetrics;
+import android.app.Activity;
+import android.content.Context;
 
 public class PuzzleBoard {
     private Bitmap originalImage;
     private int rows, cols;
     private List<PuzzlePiece> puzzlePieces;
-
-    public PuzzleBoard(Bitmap image, int rows, int cols) {
+    private Context context;
+    public PuzzleBoard(Bitmap image, int rows, int cols, Context context) {
         this.originalImage = image;
         this.rows = rows;
         this.cols = cols;
+        this.context = context;
         createPuzzlePieces();
     }
     public int getRows() {
@@ -29,27 +33,39 @@ public class PuzzleBoard {
     }
     private void createPuzzlePieces() {
         puzzlePieces = new ArrayList<>();
-        int pieceWidth = originalImage.getWidth() / cols;
-        int pieceHeight = originalImage.getHeight() / rows;
+
+        // Obtener el ancho de la pantalla
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        ((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int screenWidth = displayMetrics.widthPixels;
+
+        // Escalar la imagen para que ocupe todo el ancho de la pantalla
+        int targetHeight = (int) ((double) screenWidth / originalImage.getWidth() * originalImage.getHeight());
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(originalImage, screenWidth, targetHeight, true);
+
+        int pieceWidth = screenWidth / cols;
+        int pieceHeight = targetHeight / rows;
         int count = 1;
 
-        // Se crean las piezas a partir de la imagen
+        // Se crean las piezas a partir de la imagen escalada
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                Bitmap pieceImage = Bitmap.createBitmap(originalImage, col * pieceWidth, row * pieceHeight, pieceWidth, pieceHeight);
+                Bitmap pieceImage = Bitmap.createBitmap(scaledBitmap, col * pieceWidth, row * pieceHeight, pieceWidth, pieceHeight);
                 pieceImage = addNumberToBitmap(pieceImage, count);
                 PuzzlePiece piece = new PuzzlePiece(pieceImage, row, col, count++);
                 puzzlePieces.add(piece);
             }
         }
+
         // Se elimina una pieza para crear el espacio vacío
         puzzlePieces.remove(puzzlePieces.size() - 1);
         Collections.shuffle(puzzlePieces);
         while (!isSolvable()) {
-            Collections.shuffle(puzzlePieces); // Opcional: mezcla para iniciar el juego
+            Collections.shuffle(puzzlePieces);
         }
         puzzlePieces.add(null); // Representa el espacio en blanco
     }
+
 
     public List<PuzzlePiece> getPuzzlePieces() {
         return puzzlePieces;
