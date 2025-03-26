@@ -27,6 +27,8 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.content.Intent;
 import android.app.Activity;
+import android.widget.LinearLayout;
+
 import androidx.core.content.FileProvider;
 
 
@@ -36,9 +38,9 @@ public class CaptureFragment extends Fragment {
     private ImageView imageView;
     private Uri imageUri;
     private Button btnCapture;
-
+    private Button btnOpenGalery;
+    private Button btnHistory;
     private Bitmap capturedImage;
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -46,6 +48,7 @@ public class CaptureFragment extends Fragment {
         imageView = view.findViewById(R.id.imageView);
         btnCapture = view.findViewById(R.id.btnCapture);
         btnCapture.setOnClickListener(v -> dispatchTakePictureIntent());
+
         return view;
     }
 
