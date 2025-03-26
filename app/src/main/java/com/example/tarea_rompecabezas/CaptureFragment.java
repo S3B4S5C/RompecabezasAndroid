@@ -18,6 +18,17 @@ import com.yalantis.ucrop.UCrop;
 import java.io.File;
 import java.io.IOException;
 import android.app.Activity;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.Date;
+
+import android.os.Environment;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.content.Intent;
+import android.app.Activity;
+import androidx.core.content.FileProvider;
+
 
 public class CaptureFragment extends Fragment {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -51,12 +62,12 @@ public class CaptureFragment extends Fragment {
     }
 
 
-    private void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        }
-    }
+//    private void dispatchTakePictureIntent() {
+//        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+//            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+//        }
+//    }
 
 
 
@@ -65,18 +76,9 @@ public class CaptureFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == REQUEST_IMAGE_CAPTURE && data != null) {
-                Bundle extras = data.getExtras();
-                if (extras != null) {
-                    Bitmap imageBitmap = (Bitmap) extras.get("data");
-                    if (imageBitmap != null) {
-                        imageUri = saveImageToCache(imageBitmap);
-                        if (imageUri != null) {
-                            startCrop(imageUri);
-                        } else {
-                            showError("Error al guardar la imagen.");
-                        }
-                    }
+            if (requestCode == REQUEST_IMAGE_CAPTURE) {
+                if (photoUri != null) {
+                    startCrop(photoUri);  // Usa el archivo en vez de la miniatura
                 }
             } else if (requestCode == UCrop.REQUEST_CROP) {
                 Uri croppedUri = UCrop.getOutput(data);
@@ -96,19 +98,44 @@ public class CaptureFragment extends Fragment {
         }
     }
 
-    private Uri saveImageToCache(Bitmap bitmap) {
-        File cachePath = new File(requireContext().getCacheDir(), "captured.jpg");
+
+    private Uri photoUri;
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(requireActivity().getPackageManager()) != null) {
+            File photoFile = createImageFile();
+            if (photoFile != null) {
+                photoUri = FileProvider.getUriForFile(requireContext(),
+                        "com.example.tarea_rompecabezas.fileprovider", photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+        }
+    }
+    private File createImageFile() {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        File storageDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         try {
-            java.io.FileOutputStream stream = new java.io.FileOutputStream(cachePath);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-            stream.flush();
-            stream.close();
-            return Uri.fromFile(cachePath);
+            return File.createTempFile("IMG_" + timeStamp, ".jpg", storageDir);
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
     }
+
+//    private Uri saveImageToCache(Bitmap bitmap) {
+//        File cachePath = new File(requireContext().getCacheDir(), "captured.jpg");
+//        try {
+//            java.io.FileOutputStream stream = new java.io.FileOutputStream(cachePath);
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+//            stream.flush();
+//            stream.close();
+//            return Uri.fromFile(cachePath);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
     private Bitmap cropToSquare(Bitmap bitmap) {
         if (bitmap == null) return null;
 
