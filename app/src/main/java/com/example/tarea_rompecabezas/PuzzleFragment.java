@@ -31,6 +31,8 @@ public class PuzzleFragment extends Fragment {
             int puzzleSize = getArguments().getInt("puzzleSize", 3); // Valor por defecto 3x3
             puzzleBoard = new PuzzleBoard(capturedImage, puzzleSize, puzzleSize);
             gridView.setNumColumns(puzzleSize);
+            gridView.setVerticalSpacing(10);
+            gridView.setHorizontalSpacing(10);
         }
 
         // Se asigna un adaptador para mostrar las piezas en un GridView

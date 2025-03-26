@@ -5,6 +5,10 @@ import android.graphics.Bitmap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 
 public class PuzzleBoard {
     private Bitmap originalImage;
@@ -27,12 +31,14 @@ public class PuzzleBoard {
         puzzlePieces = new ArrayList<>();
         int pieceWidth = originalImage.getWidth() / cols;
         int pieceHeight = originalImage.getHeight() / rows;
+        int count = 1;
 
         // Se crean las piezas a partir de la imagen
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 Bitmap pieceImage = Bitmap.createBitmap(originalImage, col * pieceWidth, row * pieceHeight, pieceWidth, pieceHeight);
-                PuzzlePiece piece = new PuzzlePiece(pieceImage, row, col);
+                pieceImage = addNumberToBitmap(pieceImage, count);
+                PuzzlePiece piece = new PuzzlePiece(pieceImage, row, col, count++);
                 puzzlePieces.add(piece);
             }
         }
@@ -66,6 +72,26 @@ public class PuzzleBoard {
             return true; // Movimiento válido
         }
         return false; // No se puede mover
+    }
+    private Bitmap addNumberToBitmap(Bitmap bitmap, int number) {
+        int pieceSize = bitmap.getWidth();
+        Bitmap mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Canvas canvas = new Canvas(mutableBitmap);
+        Paint paint = new Paint();
+        paint.setTextSize(pieceSize / 6);
+        paint.setColor(Color.BLACK);
+        paint.setTextSize(10);
+        paint.setTypeface(Typeface.DEFAULT_BOLD);
+        paint.setAntiAlias(true);
+        paint.setTextAlign(Paint.Align.RIGHT);
+
+        int margin = pieceSize / 15;
+        int x = bitmap.getWidth() - margin;
+        int y = margin + (int) (-paint.ascent());
+
+        canvas.drawText(String.valueOf(number), x, y, paint);
+
+        return mutableBitmap;
     }
 
     private boolean isAdjacent(int pos1, int pos2) {

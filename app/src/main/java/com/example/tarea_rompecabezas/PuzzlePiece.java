@@ -4,14 +4,15 @@ import android.graphics.Bitmap;
 
 public class PuzzlePiece {
     private Bitmap image;
-    private int originalRow, originalCol, actualRow, actualCol;
+    private int originalRow, originalCol, actualRow, actualCol, number;
 
-    public PuzzlePiece(Bitmap image, int originalRow, int originalCol) {
+    public PuzzlePiece(Bitmap image, int originalRow, int originalCol, int number) {
         this.image = image;
         this.originalRow = originalRow;
         this.originalCol = originalCol;
         this.actualRow = originalRow;
         this.actualCol = originalCol;
+        this.number = number;
     }
 
     public Bitmap getImage() {
@@ -38,4 +39,6 @@ public class PuzzlePiece {
     public int getOriginalRow(){
         return originalRow;
     }
+
+    public int getNumber() { return number; }
 }
