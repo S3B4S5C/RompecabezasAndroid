@@ -77,22 +77,32 @@ public class PuzzleBoard {
         int pieceSize = bitmap.getWidth();
         Bitmap mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
         Canvas canvas = new Canvas(mutableBitmap);
-        Paint paint = new Paint();
-        paint.setTextSize(pieceSize / 6);
-        paint.setColor(Color.BLACK);
-        paint.setTextSize(10);
-        paint.setTypeface(Typeface.DEFAULT_BOLD);
-        paint.setAntiAlias(true);
-        paint.setTextAlign(Paint.Align.RIGHT);
+
+        Paint paintBorder = new Paint();
+        paintBorder.setTextSize(pieceSize / 6);
+        paintBorder.setColor(Color.BLACK);  // Borde negro
+        paintBorder.setTypeface(Typeface.DEFAULT_BOLD);
+        paintBorder.setAntiAlias(true);
+        paintBorder.setTextAlign(Paint.Align.RIGHT);
+        paintBorder.setStyle(Paint.Style.STROKE);
+        paintBorder.setStrokeWidth(pieceSize / 30); // Grosor del borde
+
+        Paint paintText = new Paint(paintBorder);
+        paintText.setColor(Color.WHITE);  // Texto blanco
+        paintText.setStyle(Paint.Style.FILL);
 
         int margin = pieceSize / 15;
         int x = bitmap.getWidth() - margin;
-        int y = margin + (int) (-paint.ascent());
+        int y = margin + (int) (-paintBorder.ascent());
 
-        canvas.drawText(String.valueOf(number), x, y, paint);
+        // Dibujar borde negro
+        canvas.drawText(String.valueOf(number), x, y, paintBorder);
+        // Dibujar texto blanco encima
+        canvas.drawText(String.valueOf(number), x, y, paintText);
 
         return mutableBitmap;
     }
+
 
     private boolean isAdjacent(int pos1, int pos2) {
         int row1 = pos1 / cols, col1 = pos1 % cols;
