@@ -47,9 +47,10 @@ public class PuzzleAdapter extends BaseAdapter {
 
         if (convertView == null) {
             imageView = new ImageView(context);
-            imageView.setLayoutParams(new GridView.LayoutParams(cellSize-15, cellSize-15));
+            imageView.setLayoutParams(new GridView.LayoutParams(cellSize-40, cellSize-40));
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setPadding(3, 3, 3, 3);
+            imageView.setPadding(0, 0, 0, 0);
+
         } else {
             imageView = (ImageView) convertView;
         }
