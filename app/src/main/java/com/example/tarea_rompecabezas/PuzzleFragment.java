@@ -1,5 +1,6 @@
 package com.example.tarea_rompecabezas;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -60,11 +61,21 @@ public class PuzzleFragment extends Fragment {
     }
 
 
-    private void showGameCompletedDialog(){
-        new AlertDialog.Builder(getContext()).setTitle("Felicidades")
-                .setMessage("Has Completado el rompecabezas")
-                .setPositiveButton("OK", (dialog, which) -> getActivity().finish())
-                .setCancelable(false).show();
+    private void showGameCompletedDialog() {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Felicidades")
+                .setMessage("Has completado el rompecabezas. ¿Quieres volver al menú principal?")
+                .setPositiveButton("Sí", (dialog, which) -> returnToMainMenu())
+                .setNegativeButton("No", (dialog, which) -> getActivity().finish())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void returnToMainMenu() {
+        Intent intent = new Intent(getActivity(), MainActivity.class); // Reemplaza con el nombre de tu actividad de menú
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        getActivity().finish(); // Cierra la actividad actual para evitar que el usuario regrese con "atrás"
     }
     public void animateSolution(List<Integer> steps) {
         Handler handler = new Handler();
