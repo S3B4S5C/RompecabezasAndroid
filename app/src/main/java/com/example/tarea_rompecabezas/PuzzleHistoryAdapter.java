@@ -16,6 +16,7 @@ import android.graphics.Bitmap;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
 
 public class PuzzleHistoryAdapter extends BaseAdapter {
     private Context context;
@@ -61,9 +62,9 @@ public class PuzzleHistoryAdapter extends BaseAdapter {
         PuzzleEntity puzzle = puzzles.get(position);
         Log.d("amigomio", "size:" + puzzle.size);
         Log.d("amigomio", "position:" + position);
-        Log.d("amigomio", "puzzles:" + puzzle.solveTime);
+        Log.d("amigomio", "puzzles:" +formatTime( puzzle.solveTime));
         puzzleSize.setText("Tamaño: " + puzzle.size + "x" + puzzle.size);
-        solveTime.setText("Tiempo: " + puzzle.solveTime);
+        solveTime.setText("Tiempo: " + formatTime(puzzle.solveTime));
 
         // Cargar imagen desde la ruta guardada
         //File imgFile = new File(puzzle.imagePath);
@@ -85,6 +86,11 @@ public class PuzzleHistoryAdapter extends BaseAdapter {
     // Convertir byte[] a Bitmap
     public static Bitmap bytesToBitmap(byte[] imageBytes) {
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+    }
+    private String formatTime(long totalMilliseconds) {
+        long minutes = (totalMilliseconds / 1000) / 60; // Extraer minutos
+        long seconds = (totalMilliseconds / 1000) % 60; // Extraer segundos
+        return String.format("%02d:%02d", minutes, seconds); // Formato MM:SS
     }
 
 }
