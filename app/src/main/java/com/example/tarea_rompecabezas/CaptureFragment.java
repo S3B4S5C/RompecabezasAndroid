@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -17,18 +16,11 @@ import androidx.fragment.app.Fragment;
 import com.yalantis.ucrop.UCrop;
 import java.io.File;
 import java.io.IOException;
-import android.app.Activity;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.Date;
-
+import androidx.fragment.app.FragmentTransaction;
 import android.os.Environment;
-import android.net.Uri;
-import android.provider.MediaStore;
-import android.content.Intent;
-import android.app.Activity;
-import android.widget.LinearLayout;
-
 import androidx.core.content.FileProvider;
 
 
@@ -56,14 +48,20 @@ public class CaptureFragment extends Fragment {
         return view;
     }
 
+    private void openHistory() {
+        // Cargar el PuzzleHistoryFragment cuando el usuario presione el botón de historial
+        FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+        PuzzleHistoryFragment historyFragment = new PuzzleHistoryFragment();
+
+        // Reemplazar el contenedor de fragmentos con PuzzleHistoryFragment
+        transaction.replace(R.id.fragment_container, historyFragment); // Usar el ID de tu contenedor de fragmentos
+        transaction.addToBackStack(null); // Permitir que el usuario navegue hacia atrás
+        transaction.commit(); // Aplicar la transacción
+    }
+
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, PICK_IMAGE_REQUEST);
-    }
-
-    private void openHistory() {
-   //     Intent intent = new Intent(requireActivity(), HistoryActivity.class);
-     //   startActivity(intent);
     }
 
     private void startCrop(Uri sourceUri) {

@@ -8,21 +8,23 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
 import android.app.AlertDialog;
 import android.util.Log;
 import androidx.fragment.app.Fragment;
 import android.os.Handler;
+
+import java.io.ByteArrayOutputStream;
 import java.util.List;
+import androidx.room.Room;
 
 public class PuzzleFragment extends Fragment {
     private Bitmap capturedImage;
     private PuzzleBoard puzzleBoard;
     private GridView gridView;
     private Button btnSolve;
-
+    private long startTime;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -37,6 +39,7 @@ public class PuzzleFragment extends Fragment {
             gridView.setNumColumns(puzzleSize);
             gridView.setVerticalSpacing(10);
             gridView.setHorizontalSpacing(10);
+            startTime = System.currentTimeMillis();
         }
 
         // Se asigna un adaptador para mostrar las piezas en un GridView
@@ -45,13 +48,57 @@ public class PuzzleFragment extends Fragment {
         gridView.setOnItemClickListener((parent, view1, position, id) -> {
             if (puzzleBoard.movePiece(position)) {
                 ((PuzzleAdapter) gridView.getAdapter()).updatePieces(puzzleBoard.getPuzzlePieces());
+
                 if (puzzleBoard.isSolved()){
+                    Log.d("amigomio", "Tiempo");
+                    capturedImage = resizeBitmap(capturedImage, 300, 300);
+                    saveOnDatabase(bitmapToBytes(capturedImage), puzzleBoard.getCols(), System.currentTimeMillis() - startTime, true);
                     showGameCompletedDialog();
                 }
             }
         });
         btnSolve.setOnClickListener(v -> new SolvePuzzleTask().execute());
         return view;
+    }
+    private void saveOnDatabase(byte[] imageBytes, int size, long solveTime, boolean isCompleted) {
+        PuzzleEntity puzzle = new PuzzleEntity();
+        puzzle.imagePath = "";
+        puzzle.imageBytes = imageBytes;
+        puzzle.size = size;
+        puzzle.isCompleted = isCompleted;
+        puzzle.solveTime = solveTime;
+
+        Log.d("amigomio", "Hola " + imageBytes);
+        new Thread(() -> {
+            PuzzleDatabase db = Room.databaseBuilder(requireContext(),
+                    PuzzleDatabase.class, "puzzle_db").allowMainThreadQueries().build();
+            db.puzzleDao().insert(puzzle);
+        }).start();
+        Log.d("amigomio", "Tiempo de resolución: " + solveTime + "ms");
+    }
+
+    public Bitmap resizeBitmap(Bitmap original, int maxWidth, int maxHeight) {
+        int width = original.getWidth();
+        int height = original.getHeight();
+
+        float ratioBitmap = (float) width / (float) height;
+        float ratioMax = (float) maxWidth / (float) maxHeight;
+
+        int finalWidth = maxWidth;
+        int finalHeight = maxHeight;
+
+        if (ratioMax > ratioBitmap) {
+            finalWidth = (int) (maxHeight * ratioBitmap);
+        } else {
+            finalHeight = (int) (maxWidth / ratioBitmap);
+        }
+
+        return Bitmap.createScaledBitmap(original, finalWidth, finalHeight, true);
+    }
+    public static byte[] bitmapToBytes(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        return stream.toByteArray();
     }
     private class SolvePuzzleTask extends AsyncTask<Void, Void, List<Integer>> {
         private ProgressDialog progressDialog;
@@ -112,6 +159,8 @@ public class PuzzleFragment extends Fragment {
                     if (puzzleBoard.movePiece(steps.get(index))) {
                         ((PuzzleAdapter) gridView.getAdapter()).updatePieces(puzzleBoard.getPuzzlePieces());
                         if (puzzleBoard.isSolved()){
+                            capturedImage = resizeBitmap(capturedImage, 300, 300);
+                            saveOnDatabase(bitmapToBytes(capturedImage), puzzleBoard.getCols(), System.currentTimeMillis() - startTime, false);
                             showGameCompletedDialog();
                         }
                     }
